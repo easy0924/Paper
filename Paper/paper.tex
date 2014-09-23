@@ -1,5 +1,5 @@
 \documentclass[a4paper]{article}
-\usepackage{iwslt14,amssymb,amsmath,epsfig}
+\usepackage{iwslt14,amssymb,amsmath,epsfig,multirow,spreadtab,array}
 \usepackage{tikz}
 \usetikzlibrary{arrows}
 \usetikzlibrary{trees}
@@ -7,6 +7,8 @@
 \usetikzlibrary{chains}
 \usetikzlibrary{calc}
 \usetikzlibrary{positioning}
+\usepackage[T1]{fontenc}
+\usepackage[latin1,utf8x]{inputenc}
 \usepackage[encapsulated]{CJK}
 \newcommand{\cntext}[1]{\begin{CJK}{UTF8}{gbsn}#1\end{CJK}}
 \setcounter{page}{1}
@@ -46,7 +48,7 @@ Karlsruhe Institute of Technoloy, Germany \\
 \maketitle
 %
 \begin{abstract}
-We propose a novel data-driven rule-based preordering approach, which uses the information of syntax tree and word alignment to reorder the words in source sentences before decoding in a phrase-based SMT system between English and Chinese. The preorering algorithm extracts reordering patterns from multiple levels of the syntax trees of the training data and applies the rules on the source sentences in a similar manner. We've conducted experiments in English-to-Chinese and Chinese-to-English translation directions. Our results show that the approach has led to improved translation quality both when it was applied separately on the baseline or when it was combined with some other reordering approaches. We report an improvement of $0.43$ in BLEU score when our preordering approach was used in addition to the short rule \cite{short}, long rule\cite{long} and tree rule \cite{tree} based preordering approaches in the English-to-Chinese translation direction. There's also an improvement of $0.3$ in BLEU score when our preordering approach was used in addition to the aforementioned preordering approaches in the Chinese-to-English translation direction. Through the translation examples, we've also found improvements in syntactic structure with our preordering approach.
+We propose a novel data-driven rule-based preordering approach, which uses the information of syntax tree and word alignment to reorder the words in source sentences before decoding in a phrase-based SMT system between English and Chinese. The preorering algorithm extracts reordering patterns from multiple levels of the syntax trees of the training data and applies the rules on the source sentences in a similar manner. We've conducted experiments in English-to-Chinese and Chinese-to-English translation directions. Our results show that the approach has led to improved translation quality both when it was applied separately on the baseline or when it was combined with some other reordering approaches. As our reordering approach was used alone, it showed an improvement of $1.61$ in BLEU score in the English-to-Chinese translation direction and an improvement of $2.16$ in BLEU score in the Chinese-to-English translation direction, in comparison with the baseline, which used no preordering at all. As our preordering approach were combined with the short rule \cite{short}, long rule \cite{long} and tree rule \cite{tree} based preordering approaches, it showed an improvement of $0.43$ in BLEU score in the English-to-Chinese translation direction and an improvment of $0.3$ in BLEU score in the Chinese-to-English translation direction. Through the translations that used our preordering approach, we've also found improvements in syntactic structure.
 \end{abstract}
 %
 \section{Introduction}
@@ -88,213 +90,250 @@ For the other, both languages have sometimes very different sentence structures.
 Some typical problems of word orders between English and Chinese that we've found in the data are as follows:
 
 \begin{itemize}
-\item \emph{Pre-modifier instead of post-modifier.} In Chinese people tend to use pre-modifier rather than post-modifier. This involves the position change of adverbials, relative clauses and preposition phrases during translation.
-\item \emph{Constuction of questions.}
-\item \emph{Special sentence constructions.} For example, \emph{B\^{a}}-construction in Chinese and sentence constructions such as \emph{there be} and inverted negative sentences in English don't have correspondence in the other language in general.
-\item \emph{Long distance word position change.}
+\item \emph{Pre-modifier instead of post-modifier}\\ In Chinese people tend to use pre-modifier rather than post-modifier. This involves the position change of adverbials, relative clauses and preposition phrases during translation.
+\item \emph{Construction of questions}
+\item \emph{Special sentence constructions}\\ For example, \emph{B\^{a}}-construction in Chinese and sentence constructions such as \emph{there be} and inverted negative sentences in English don't have correspondence in the other language in general.
+\item \emph{Long distance word position change}
 \end{itemize}
 
-Not all these reordering problem can be solved well by using reordering rules based on POS tag sequence or single level of syntax tree. In order to improve the reordering between English and Chinese, we need reordering method that can handle more complicated, unstructural word order change. Inspired by the ideas of reordering on syntax tree and hierarchical phrases, we created the MLT reordering, which reorders words based on multiple syntactic levels and can handle long distance word position change and complicated word position change very well.
+From previous work of others, the following types of reordering rules have been researched:
+
+\begin{itemize}
+\item \emph{Short rules} \cite{short} \\
+Short rules are extracted based on the sequences of adjacent words or their POS tags in the sentence from training data. Sequences of adjacent words or POS tags are observed, rules are then extracted if the same reordering patterns appear frequently. Following is a reordering pattern of a short rule:\medskip\\
+\texttt{WRB MD DT -> DT WRB MD}
+\item \emph{Long rules} \cite{long}\\
+Long rules are specially designed to improve the long distance word reordering for language pairs like English and German. The rules are based on POS tags of the text, and use a placeholder ($*$) to represent one or more words. Following is a reordering pattern of a long rule:\medskip\\
+\texttt{NN $*$ MD -> $*$ MD NN}
+
+\item \emph{Tree rules} \cite{tree}\\
+While short rules and long rules are based on the flat structure of sentences, tree rules reorder sentences by using information from sentences' syntactic structure. The syntax tree and word alignment of the training corpus are used to train the reordering rules. The tree rules reorder the words both on the word level and on the constituent level. Following is a reordering pattern of a tree rule:\medskip\\
+\texttt{NP ( ADJP JJ NN ) -> JJ NN ADJP}\medskip\\
+The parenthesis in the example represents the hierarchy in the syntax tree. The left side of the rule corresponds a tree with the root labeled with \emph{NP} and three children, each labeled with \emph{ADJP}, \emph{JJ} and \emph{NN}. 
+\end{itemize}
+
+However, not all these reordering problem of Chinese translation can be solved well by using these reordering rules based either on POS tag sequence or single level of syntax tree. In order to improve the reordering between English and Chinese, we need reordering method that can handle more complicated, unstructural word order change. Inspired by the ideas of reordering on syntax tree and hierarchical phrases, we created the MLT reordering, which reorders words based on multiple syntactic levels and can handle long distance word position change and complicated word position change very well.
 
 \section{Multi-Level-Tree Reordering}
 \subsection{Reordering on Multiple Syntactic Levels}
 
-Reordering patterns are based on multiple levels of the syntax tree. Figure~\ref{unstructured}
+Reordering patterns are based on multiple levels of the syntax tree. Figure~\ref{unstructured} illustrates how the reordering patterns are detected from the syntax tree. In the example, the detection starts from the root node, go downwards three levels and use the nodes in these levels to detect the reordering pattern. These nodes that are used for detecting the reordering pattern are colored gray and have an italic font. The leaf nodes in the syntax tree indicate words in the sentence, which has rectangle shape with angular corners.
+
+According to the alignment information with the corresponding Chinese translation, the node labeled with \emph{NP} is moved forward to the first place in the translation and the node labeled with \emph{IN of} is moved forward to the second place in translation. So from the root node with a search depth $3$, the following reordering pattern can be found:\bigskip
+
+\noindent \texttt{NP ( \textbf{CD}$_0$ NP ( NP ( \textbf{JJ}$_1$ \textbf{NNS}$_2$ ) PP ( \textbf{IN}$_3$ \textbf{NP}$_4$ ) ) ) -> NP IN CD JJ NNS}\medskip \\
+\texttt{or -> 4 3 0 1 2 (with index)}\bigskip
+
+where the POS tags in bold corresponds to words in the leaf nodes of the syntax tree, which are parts that are actually reordered and have a darker gray color in the figure. The parentheses in the reordering pattern indicate the corresponding hierarchies in the syntax tree. The reordering can be alternatively represented with index, which is the actual internal representation to avoid ambiguity caused by POS tags with the same name and we use this representation throughout this paper.
 
 \begin{figure}
 \centering
-\scalebox{1}{\input{unstructured.tikz}}
-\caption{Reordering pattern from multiple syntactic levels}
+\scalebox{1.3}{\input{unstructured.tikz}}
+\caption{Detection of reordering pattern from multiple syntactic levels}
 \label{unstructured}
 \end{figure}
 
 \subsection{Rule Extraction}
-\subsection{Rule Application}
 
-\section{Results}
+In order to find as much information for reordering as possible. The algorithm of rule extraction detects the reordering patterns from all nodes in the syntax tree and it goes downwards for any number of hierarchies, until it reaches the lowest hierarchy in the subtrees.
 
-\section{Conclusion}
+In the implementation, the program conducts a depth-first search (DFS) to traverse every node in a syntax tree. Every time when a node is reached, the program conducts another iterative deepening depth-first search (IDDFS) in its subtree with depth-limit from $1$ to the subtree's depth. And the program detects if there are any patterns of word position changes at the same time, by using the alignment for comparison.
 
-\subsection{First page}
+The detected word position changes are checked for their validity for reordering rules. A valid reordering pattern should both has actual word reordering and clearly distinguishable new order on the side of the target language, i.e. no collision of aligned ranges on the target side.
 
-The first page should have the paper title, author(s), and affiliation(s)
-centered on the page across both columns. The remainder of the text 
-must be in the two-column format, staying within the indicated image 
-area. 
-
-\subsubsection{Paper Title}
-The paper title must be in boldface. All non-function words must be capitalized,
-and all other words in the title must be lower case. The paper title is centered
-across the top of the two columns on the first page as indicated above.
-
-\subsubsection{Authors' Name(s)}
-The authors' name(s) and affiliation(s) appear centered below the paper
-title. If space permits, include a mailing address here. The templates indicate
-the area where the title and author information should go. These items need not
-be confined to the number of lines indicated; papers with multiple
-authors and affiliations may require two or more lines. 
-Note that the submission version of technical papers \emph{should be 
-anonymized for review}. 
-
-\subsubsection{Abstract}
-Each paper must contain an abstract that appears at the beginning of the paper.
-
-\subsection{Basic layout features}
-
-\begin{itemize}
-%\itemsep -1.3mm
-\item Proceedings will be printed in A4 format. The layout is designed 
-so that files, when printed in US Letter format, include all material 
-but margins are not symmetric. 
-Although this is not an absolute requirement, if at all possible,
-{\bf PLEASE TRY TO MAKE YOUR SUBMISSION IN A4 FORMAT.}
-\item Two columns are used except for the title part and possibly for large 
-figures that need a full page width.
-\item Left margin is 20 mm.
-\item Column width is 80 mm.
-\item Spacing between columns is 10 mm.
-\item Top margin 25 mm (except first page 30 mm to title top).
-\item Text height (without headers and footers) is maximum 235 mm.
-\item Headers and footers must be left empty (they will be added for 
-printing).
-\item Check indentations and spacings by comparing to this 
-example file (in pdf format).
-\end{itemize}
-
-\subsubsection{Headings}
-
-Section headings are centered in boldface
-with the first word capitalized and the rest of the heading in 
-lower case. Sub-headings appear like major headings, except they 
-start at the left margin in the column.
-Sub-sub-headings appear like sub-headings, except they are in italics 
-and not boldface. See the examples given in this 
-file. No more than 3 levels of headings should be used.
-
-\subsection{Text font}
-
-Times or Times Roman font is used for the main text. Recommended 
-font size is 9 points which is also the minimum allowed size.
-Other font types may be used if needed for 
-special purposes. While making the final PostScript file, 
-remember to include all fonts!
-
-\LaTeX\ users: DO NOT USE Computer Modern FONT FOR TEXT (Times is 
-specified in the style file). If possible, make the final 
-document using POSTSCRIPT FONTS.
-This is necessary given that, for example, equations with 
-non-ps Computer Modern are very hard to read on screen.
-
-\subsection{Figures}
-
-All figures must be centered on the column (or page, if the figure spans 
-both columns).
-Figure captions should follow each figure and have the format given in 
-Fig.~\ref{spprod}.
-
-Figures should preferably be line drawings. If they contain gray 
-levels or colors, they should be checked to print well on a 
-high-quality non-color laser printer.
-
-\subsection{Tables}
-
-An example of a table is shown as Table \ref{table1}. Somewhat 
-different styles are allowed according to the type and purpose of the 
-table. The caption text may be above or below the table.
-
-\begin{table} [t,h]
-\caption{\label{table1} {\it This is an example of a table.}}
-\vspace{2mm}
-\centerline{
-\begin{tabular}{|c|c|}
-\hline
-ratio & decibels \\
-\hline  \hline
-1/1 & 0 \\
-2/1 & $\approx 6$ \\
-3.16 & 10 \\
-10/1 & 20 \\ 
-1/10 & -20 \\
-\hline
-\end{tabular}}
-\end{table}
-
-\subsection{Equations}
-
-Equations should be placed on separate lines and numbered. Examples 
-of equations are given below.
-Particularly,
-%
-%\vspace{-3mm}
-\begin{equation}
-x(t) = s(f_\omega(t))
-\label{eq1}
-\end{equation}
-where \(f_\omega(t)\) is a special warping function
-\begin{equation}
-f_\omega(t)=\frac{1}{2\pi j}\oint_C \frac{\nu^{-1k}d\nu}
-{(1-\beta\nu^{-1})(\nu^{-1}-\beta)}
-\label{eq2}
-\end{equation}
-A residue theorem states that
-\begin{equation}
-\oint_C F(z)dz=2 \pi j \sum_k Res[F(z),p_k]
-\label{eq3}
-\end{equation}
-Applying (\ref{eq3}) to (\ref{eq1}), 
-it is straightforward to see that
-\begin{equation}
-1 + 1 = \pi
-\label{eq4}
-\end{equation}
-
-Make sure to use \verb!\eqref! when refering to equation numbers.
-Finally we have proven the secret theorem of all speech sciences (see
-equation~\eqref{eq3} above).  No more math is needed to show how 
-useful the result is! 
-
-\begin{figure}[t]
-\centerline{\epsfig{figure=figure,width=40mm}}
-\caption{{\it Schematic diagram of speech production.}}  
-\label{spprod}
+\begin{figure}
+\centering
+\scalebox{1.3}{\input{extract.tikz}}
+\caption{A phrase with its syntax tree and alignment for rule extraction}
+\label{extract}
 \end{figure}
 
-\subsection{Hyperlinks}
+Figure~\ref{extract} shows a phrase to be translated, together with its syntax tree and word alignment of parallel text. The leaf nodes are underlined and indexed according to the order they appear in the left side of the patterns. The index sequences on the right side of the patterns indicate the reordering. In this example, we can find the following reordering patterns:\bigskip
 
-Hyperlinks can be included in your paper. Moreover, be aware that the paper
-submission procedure includes the option of specifying a hyperlink for
-additional information.  This hyperlink will be included in the CD-ROM.
-Particularly pay attention to the possibility, from this single hyperlink, to
-have further links to information such as other related documents, sound or
-multimedia.
+\noindent From node $1$:\\
+\texttt{NP ( \textbf{NP} \textbf{PP} ) -> 1 0} \hfill [1 level]\hphantom{s}\\
+\texttt{NP ( NP ( \textbf{JJ} \textbf{NNS} ) PP ( \textbf{IN} \textbf{NP} ) ) -> 3 2 0 1} \hfill [2 levels]\\
+\texttt{NP ( NP ( \textbf{JJ} \textbf{NNS} ) PP ( \textbf{IN} NP ( \textbf{JJ} \textbf{NNS} ) ) ) -> 3 4 2 0 1} \hfill [3 levels]\medskip
 
-If you choose to use active hyperlinks in your paper, 
-please make sure that they present no problems in printing to paper. 
+\noindent From node $3$:\\
+\texttt{PP ( \textbf{IN} \textbf{NP} ) -> 1 0} \hfill [1 level]\hphantom{s}\\
+\texttt{PP ( \textbf{IN} NP ( \textbf{JJ} \textbf{NNS} ) ) -> 1 2 0} \hfill [2 levels]\bigskip
 
-\subsection{Page numbering}
+The probability of the reordering patterns are calculated based on frequency of their occurrences in the training corpus. There are the left part and the right part of the reordering patterns separated by the arrow. The left part indicates the syntactic tags that should be reordered and the right part indicates how the new order should be like. The probability of the pattern is calculated by how often the left part is reordered into the right part among all its appearances in the training corpus. In addition, reordering patterns that appear less than a threshold are ignored to be used as reordering rules, in order to prevent too concrete rules without generalization capability and overfitting.
 
-Final page numbers will be added later to the document
-electronically. 
-{\em Please don't make any headers or footers!}.
+\subsection{Rule Application}
 
-\subsection{References}
+The syntax tree is traversed by DFS as the same in rule extraction. But from the root of each subtree, it's scanned with depth limit from its maximal levels, i.e. its depth, to $1$. As it turns out, any rule can be applied for a subtree at some level, a new path for this reordering will be added to the word lattice for decoding. As long as rules can be applied on a subtree for a certain depth, the rules are applied and the search for rule application on this subtree stops, and the search on the next subtree continues. 
 
-The reference format is the standard for IEEE publications.
-References should be numbered in order of appearance, 
-for example %\cite{ES1}, \cite{ES2}, and \cite{ES3}. 
+The reason for this is to prevent duplicate reorderings due to application of nested rules, which has overlapped effect with each other. These rules are normally patterns that are generated on the same subtree, but with different number of levels, which has different generalization effect on the same range of words in the text. For example, the following patterns can be detected from the syntax tree in figure~\ref{extract}:\bigskip
+
+\noindent \texttt{PP ( \textbf{IN} \textbf{NP} ) -> 1 0}\\
+\texttt{PP ( \textbf{IN} NP ( \textbf{JJ} \textbf{NNS} ) ) -> 1 2 0}\bigskip
+
+Both patterns are detected from the same node, but the second pattern is detected by retrieving the nodes one level deeper and it's more concrete. So the first pattern can be seen as a generalization of the second pattern. Whenever a rule of the second pattern can be applied, a rule of the first pattern can be applied too. Because subtrees are checked from the highest number of levels in rule application, the more concrete rule is applied first. Because the more concrete rule fits the detected pattern better and contains more details of reordering, so it may be more suitable for rule application. In this example, the second rule is applied rather than the first rule.
+
+Word reorderings are added to the word lattice as paths, which is further past to the decoder for translation. Paths with very low probability are removed, in order to save space for storing the lattice and reduce decoding time later, without compromising too much translation quality. 
+
+\subsection{Rule Combination}
+
+In order to further explore the probability of improvement, the MLT reordering rules can be combined with other types of reordering rules to achieve further improvements. This is done by training the different types of rules separately and applying them on the monotone path of the sentence independently. They generate different paths in the word lattice.
 
 \section{Experiments}
-Please make sure to give all the necessary details regarding your experimental 
-setting so as to ensure that your results could be reproduced by other teams. 
+
+We've conducted experiments on both English-to-Chinese and Chinese-to-English translation directions to get a better overview of the MLT reordering's effect. In the experiments, the MLT reordering rules are also combined with other reordering rules that are introduced before, in order to show the improvement achieved by our approach.
+
+In order to evaluate the potential of word reordering, we also used oracle reordering in the experiments. Oracle reordering is considered to be an optimally reordered sentence as input to the SMT system and do not allow additional reordering during decoding.\cite{combine} The oracle reordering is created by using the permutation of source sentences, which is extracted from the word alignment between the source text and reference.\cite{birch2}
+
+Because oracle reordering is considered as an optimally reordering, we can use it as input of the SMT system and the scores are the optimal results that can be achieved by word reordering, from which we can evaluate the potential of reordering methods.
+
+
+\subsection{English-to-Chinese System}
+
+We performed experiments with or without different reordering methods covering the English-to-Chinese translation direction. The reordering methods included our MLT reordering approach and the other reordering approaches with short rules, long rules and tree rules. The system was trained on news text from the LDC corpus and subtitles from TED talks. The development data and test data were both news text from the LDC corpus. The system was a phrase-based SMT system, which used a $6$-gram language model with Knersey-Ney smoothing. Besides the preordering, no lexical reordering or other reordering method in decoding phase was used. The text was translated through a monotone decoder.
+
+The reordering rules were extracted by using the word alignments, POS tags and syntax trees from the training data. One reference of the test data was used for evaluating the results. The threshold for rule extraction is set as $5$ times and reordering paths with probability less than $0.1$ are not added to word lattices. The decoder was a monotone decoder. Table~\ref{denw} shows the size of data used in the system.
+
+\begin{table*}
+\centering
+\begin{tabular}{|ll|r|r|r|r|r|}
+\hline
+\multicolumn{2}{|l|}{\multirow{2}{*}{Data Set}} & \multirow{2}{*}{Sentence Count} & \multicolumn{2}{c|}{Word Count} & \multicolumn{2}{c|}{Size (Byte)}\\ \cline{4-7}
+& & & English & Chinese & English & Chinese \\
+\hline
+\multirow{2}{*}{Training Data} & \multicolumn{1}{|l|}{LDC} & 303K & 10.96M & 8.56M & 60.88M & 47.27M \\ \cline{2-7}
+& \multicolumn{1}{|l|}{TED} & 151K & 2.58M & 2.86M & 14.24M & 15.63K \\ \hline
+\multicolumn{2}{|l|}{Development Data} & 919 & 30K & 25K & 164K & 142K \\ \hline
+\multicolumn{2}{|l|}{Test Data} & 1663 & 47K & 38K & 263K & 220K \\ \hline
+\end{tabular}
+\caption{Data details in English-to-Chinese system}
+\label{denw}
+\end{table*}
+
+\begin{table}
+\centering
+\STautoround*{2}
+\begin{spreadtab}{{tabular}{|l|r|r|r|}}\hline
+@				& @BLEU (\%) & @ Imprv. & @TER (\%) \\ \hline
+@Baseline		& 12.07 & & 72.15 \\ \hline
+@+Short Rules	& 12.50 & :={b3 - b2} & 71.41 \\ \hline
+@+Long Rules   & 12.99 & :={b4 - b2} & 70.71 \\ \hline
+@+Tree Rules   & 13.38 & :={b5 - b2} & 68.27 \\ \hline
+\textbf{@+MLT Rules} & \textbf{:={13.81}} & \textbf{:={b6 - b2}} & \hphantom{xxx}\textbf{:={68.20}} \\ \hline
+@Oracle Reordering & :={18.58} & :={b7 - b2} & :={62.13} \\ \hline
+\hline
+@Long Rules   & 12.31 & :={b8 - b2} & 71.81\\ \hline
+@Tree Rules   & 13.30 & :={b9 - b2} & 70.42 \\ \hline
+\textbf{@MLT Rules}    & \textbf{:={13.68}} & \textbf{:={b10 - b2}} & \textbf{:={70.25}} \\ \hline
+\end{spreadtab}
+\caption{Result overview of English-to-Chinese system}
+\label{tenw}
+\end{table}
+
+Table~\ref{tenw} shows the BLUE scores, absolute improvements of BLEU scores and TER scores for configurations with different reordering methods. The table consist of $2$ sections. the first row of the top section shows results of the baseline, which used no preordering at all. In the following rows of the top section, different types of reordering rules are combined gradually, with each type per row, and the results are showed. For example, the row with \emph{$+$MLT} Rules presents the configuration with all the rule types including MLT rules and all the other rules in the rows above. All improvements are absolute improvements of BLEU scores in comparison to the baseline. Each row with a certain reordering type presents all the different variations of this type and the best score under these configurations are shown. For example, long rules include the left rules and right rules, and the tree rules include the partial rules and recursive application. The baseline used a monotone decoder and no preordering. The row with \emph{oracle reordering} shows the results from the configuration that used the oracle reordering as input. The results of oracle reordering can be used for analyzing the potential of source sentence reordering. In the lower section of the table, different rule types are not combined and the effect of each rule type is shown.
+
+\subsection{Chinese-to-English System}
+
+The experiments for Chinese-to-English systems had a similar setup as described in the last section. The parallel data used in the English-to-Chinese system was also used in this experiment by switching the source language and the target language. We only used the LDC data set for training, and no TED data were used in this system. The test data had three English references for evaluating the results instead of one as in the previous system. The data used are summarized in table~\ref{dzhen2}.
+
+\begin{table*}
+\centering
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\multirow{2}{*}{Data Set} & \multirow{2}{*}{Sentence Count} & \multicolumn{2}{c|}{Word Count} & \multicolumn{2}{c|}{Size (Byte)}\\ \cline{3-6}
+& & Chinese & English & Chinese & English \\
+\hline
+Training Data & 303K & 8.56M & 10.96M & 47.27M & 60.88M\\ \hline
+Development Data & 919 & 25K & 30K & 142K & 164K \\ \hline
+Test Data & 1663 & 38K & 47K & 220K & 263K \\ \hline
+\end{tabular}
+\caption{Data details in Chinese-to-English system}
+\label{dzhen2}
+\end{table*}
+
+\begin{table}
+\centering
+\STautoround*{2}
+\begin{spreadtab}{{tabular}{|l|r|r|r|}}\hline
+@				& @BLEU (\%) & @Imprv. & @TER (\%) \\ \hline
+@Baseline		& 21.80 & & 62.09 \\ \hline
+@+Short Rules	& 22.90 & :={b3 - b2}& 61.64 \\ \hline
+@+Long Rules   & 23.13 & :={b4 - b2} & 61.43\\ \hline
+@+Tree Rules   & 23.84 & :={b5 - b2} & 60.95\\ \hline
+\textbf{@+MLT Rules}    & \textbf{:={24.14}} & \textbf{:={b6 - b2}} & \hphantom{xxx} \textbf{:={60.79}}\\ \hline
+@Oracle Reordering & :={26.80} & :={b7 -b2} & :={56.97} \\ \hline
+\hline
+@Long Rules   & 22.10 & :={b8 - b2} & 62.21\\ \hline
+@Tree Rules   & 23.35 & :={b9 - b2} & 61.52\\ \hline
+\textbf{@MLT Rules}    & \textbf{:={23.96}} & \textbf{:={b10 - b2}} & \textbf{:={60.83}}\\ \hline
+\end{spreadtab}
+\caption{Result overview of Chinese to English systems}
+\label{tzhen2}
+\end{table}
+
+Table~\ref{tzhen2} shows the results for configurations with different reordering methods for the Chinese-to-English translation. The table can be interpreted in the same manner as table~\ref{tenw} in the previous section.
+
+\subsection{Evaluation}
+
+The results shows increasing scores as we used reordering methods from short rules, long rules, tree rules to MLT rules. And better BLEU scores were achieved as we combined the different reordering rules. The MLT rules achieved better BLEU scores and TERs in both translation directions, not only when it was used alone, but also it was added to the other reordering rules. As the MLT reordering rules were used alone, it showed an improvement of $1.61$ in BLEU score in the English-to-Chinese translation direction and an improvement of $2.16$ in BLEU score in the Chinese-to-English translation direction, in comparison with the baseline, which used no reordering at all. As the MLT reordering rules were combined with the other existing reordering rules, a further improvement of $0.43$ in BLEU score (from $13.38$ to $13.81$) was shown in the English-to-Chinese translation direction, as well as a further improvement of $0.3$ in BLEU score (from $23.84$ to $24.14$) in the Chinese-to-English translation direction.
+
+We've also found improvements in the sentence structure. Table~\ref{te} shows some translation examples in both translation directions. Sections are separated by double lines in the table. Each section of this table shows one translation example with the source sentence (\emph{source}), translation without using MLT reordering (\emph{no MLT}), translation with MLT reordering (\emph{MLT}) and the reference (\emph{reference}). The translation without using MLT reordering comes from the configuration with highest BLEU score that didn't use MLT reordering. And the translation with MLT reordering comes from the configuration with highest BLEU score that used MLT reordering. From the examples, we can clearly see the improvements in sentence structure.
+
+\begin{table*}
+\centering
+\begin{tabular}{|l|m{0.7\textwidth}|} \hline
+Source & hu jintao also extended deep condolences on the death of the chinese victims and expressed sincere sympathy to the bereaved families .
+\\ \hline
+No MLT & \cntext{胡锦涛 还 表示 深切 哀悼 的 受害者 家属 的 死亡 , 向 迂难者 家属 表示 诚挚 的 慰问 。} \\ \hline
+MLT & \cntext{胡锦涛 还 对 中国 迂难者 表示 哀悼 , 向 迂难者 家属 表示 诚挚 的 慰问 。} \\ \hline 
+Reference & \cntext{胡锦涛 还 对 中方 不幸 遇难 人员 表示 深切 的 哀悼 , 并 向 遇难 着 的 亲属 致以 诚挚 的 慰问 。} \\ \hline \hline
+Source & satisfying personal interests and expanding knowledge are also major reasons why hourly work appeals to people .\\ \hline
+No MLT & \cntext{满足 个人 利益 和 扩大 知识 也 是 主要 原因 小时 工作 吸引 人 。} \\ \hline
+MLT & \cntext{满足 个人 利益 和 扩大 知识 也 是 为什么 学生 工作 吸引 人 的 主要 原因 。} \\ \hline 
+Reference & \cntext{满足 个人 兴趣 , 扩大 自己 的 知识面 也 是 兼职 小时 工 受 青睐 的 一 个 重要 原因 。} \\ \hline \hline
+
+Source & the dalai lama will go to visit washington this month .\\ \hline
+No MLT & \cntext{达赖 喇嘛 将 访问 华盛顿 的 这 一 个 月 。} \\ \hline
+MLT & \cntext{达赖 喇嘛 将 本 月 访问 华盛顿 。} \\ \hline
+%? add more examples?
+Reference & \cntext{达赖 喇嘛 将 在 本 月 前往 华盛顿 访问 。} \\ \hline \hline
+Source & \cntext{陈至立 说 , 古巴 是 拉美 和 加勒比 地区 有 重要 影响 的 国家 。}
+\\ \hline
+No MLT & chen zhili said : cuba is the latin america and the caribbean region has an important influence on the state .
+\\ \hline
+MLT & chen zhili said : cuba is a country of important influence latin america and the caribbean region .
+\\ \hline
+Reference & chen zhili said that cuba is a country of great influence in the latin american and caribbean region .
+\\ \hline \hline
+
+Source & \cntext{近年 来 , 两 国 教育 交流 日益 密切 , 人员 来往 频繁 。}
+\\ \hline
+no MLT & in recent years , the two countries education have been increasingly close exchanges and personnel contacts have been frequent .
+\\ \hline
+MLT & in recent years , the educational exchanges between the two countries have become increasingly frequent , and have had frequent contacts .
+\\ \hline
+Reference & in recent years , the educational exchange between the two countries has become increasingly close with frequent personnel visits .
+\\ \hline
+
+\end{tabular}
+\caption{Examples of translations}
+\label{te}
+\end{table*}
+
+However, by taking a close look at the gap between the scores of oracle reordering and the best scores achieved by MLT reordering, we can also see, there's still potential for improvements of translation between English and Chinese through better reordering methods.
+
+From these experiments we can draw the conclusion that our reordering method obviously improves the sentence structure and  translation quality in both English-to-Chinese and Chinese-to-English translation directions, no matter when we apply it alone or when we combine it with short rules, long rules and tree rules. 
 
 \section{Conclusions}
 
-This paper has described a novel approach for doing wonderful stuff such as ...
+We've present a new preordering approach for translation between English and Chinese. The algorithm detects and applies reordering rules uses information of word alignment and multiple syntactic levels in the syntax tree to reorder the source sentences. Reordering patterns are detected by checking if the nested tag sequences in subtrees with any number of search levels have clearly new orders in the aligned text in the target language.
 
-\section{Acknowledgements}
-The IWSLT 2014 organizing committee would like to thank the
-organizing committees of INTERSPEECH 2004 for their
-help and for kindly providing the template files.
+We've conducted experiments in both translation directions between English and Chinese with different SMT configurations. From the results we can see the BLEU scores was improved no matter when we applied the SMT reordering method to the baseline directly or when we combined it with the other reordering methods we introduced before, i.e. short rules, long rules and tree rules based reordering methods.
+
+When our approach was applied alone, it achieved an BLEU score improvement of $1.61$ in the English-to-Chinese translation direction, and an BLEU score improvement of $2.16$ in the Chinese-to-English translation direction.
+
+When our approach was combined with the short rules, long rules and tree rules based reordering methods, further improvements were achieved for both translation direction. Our approach improved the BLEU score further by $0.43$ in the English-to-Chinese translation direction and by $0.30$ in the Chinese-to-English translation direction.
+
+Besides the improvement in BLEU scores, our preordering approach also showed improvement in the sentence structure of the translation.
 
 \bibliographystyle{myieeetr}
 \bibliography{paper}
