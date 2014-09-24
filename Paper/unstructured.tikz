@@ -1,34 +1,34 @@
-\begin{tikzpicture}[scale=0.5,
+\begin{tikzpicture}[
 -,>=stealth',
-level/.style={sibling distance = 2.5cm, level distance = 1.8cm},
-level 1/.style={sibling distance=3.75cm},
-level 2/.style={sibling distance=5cm}, 
-%level 3/.style={sibling distance=4cm}, 
-treenode/.style = {scale=0.5, align=center, inner sep=0.5em, text centered, font=\sffamily},
-arn_n/.style = {treenode, rectangle, rounded corners=0.75mm, draw=black, fill=white!40, minimum width=4em, minimum height = 2em},
-arn_x/.style = {arn_n, fill=white!40, minimum height=3em, rounded corners=0},
+level/.style={sibling distance = 1.2cm, level distance = 1.5cm},
+level 1/.style={sibling distance=2.75cm},
+level 2/.style={sibling distance=3.2cm}, 
+level 4/.style={sibling distance=2cm}, 
+treenode/.style = {font=\small,align=center, inner sep=0.5em, text centered},
+arn_n/.style = {treenode, rectangle, rounded corners, draw=black, fill=white!40},
+arn_x/.style = {arn_n, fill=white!40, rounded corners=0},
 edge from parent fork down
 ]
 \node [arn_n, fill=gray!40, font=\itshape] {NP}
-child[sibling distance = 7.5cm] { node(A) [arn_x, fill=gray!70, font=\itshape] {CD\\ ten}}
+child[sibling distance = 4cm] { node(A) [arn_x, fill=gray!70, font=\itshape] {CD\\ ten}}
 child{ node [arn_n, fill=gray!40, font=\itshape] {NP}
-child{ node [arn_n, fill=gray!40, font=\itshape] {NP}
+child[sibling distance = 3.7cm]{ node [arn_n, fill=gray!40, font=\itshape] {NP}
 child{ node(B) [arn_x, fill=gray!70, font=\itshape] {JJ\\ big}}
-child{ node(C) [arn_x, fill=gray!70, font=\itshape] {NNS\\ advantages}}}
+child[sibling distance = 2cm]{ node(C) [arn_x, fill=gray!70, font=\itshape] {NNS\\ advantages}}}
 child{ node [arn_n, fill=gray!40, font=\itshape] {PP}
-child{ node(D) [arn_x, fill=gray!70, font=\itshape] {IN\\ of}}
+child[sibling distance = 1.7cm]{ node(D) [arn_x, fill=gray!70, font=\itshape] {IN\\ of}}
 child{ node(E) [arn_n, fill=gray!70, font=\itshape] {NP}
 child{ node [arn_x](F) {JJ\\ peaceful}}
 child{ node [arn_x](G) {NN\\ reunification}}}}};
 
-\node [below=4.3cm of A, scale = 0.75] (H) {\cntext{和平}};
-\node [right=0.5cm of H, scale=0.75](I) {\cntext{统一}};
-\node [right=0.5cm of I, scale=0.75](J) {\cntext{的}};
-\node [right=0.5cm of J, scale=0.75](K) {\cntext{十}};
-\node [right=0.5cm of K, scale=0.75](L) {\cntext{大}};
-\node [right=0.5cm of L, scale=0.75](M) {\cntext{好处}};
+\node [below=6.7cm of A] (H) {\cntext{和平}};
+\node [right=0.6cm of H](I) {\cntext{统一}};
+\node [right=0.6cm of I](J) {\cntext{的}};
+\node [right=0.6cm of J](K) {\cntext{十}};
+\node [right=0.6cm of K](L) {\cntext{大}};
+\node [right=0.6cm of L](M) {\cntext{好处}};
 
-\node [below=2.8cm of A](N) {};
+\node [below=4.7cm of A](N) {};
 
 \draw[dashed] (A) -- (N) -- (K.north);
 \draw[dashed] (B) -- (B|-N) -- (L.north);
