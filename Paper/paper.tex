@@ -36,14 +36,14 @@ Multiple Syntactic Levels \\in Statistical Machine Translation}
  \makeatletter
  \def\name#1{\gdef\@name{#1\\}}
  \makeatother
- \name{{\em Ge Wu, Yuqi Zhang, Alex Waibel}}
+% \name{{\em Ge Wu, Yuqi Zhang, Alex Waibel}}
 %%%%%%%%%%%%%%% End of required multiple authors changes %%%%%%%%%%%%%%%%%
 
-\address{Institute for Anthropomatics \\
-Karlsruhe Institute of Technology, Germany \\
-{\small \tt utcur@student.kit.edu, yuqi.zhang@kit.edu, alexander.waibel@kit.edu }
-}
-%
+%\address{Institute for Anthropomatics \\
+%Karlsruhe Institute of Technology, Germany \\
+%{\small \tt utcur@student.kit.edu, yuqi.zhang@kit.edu, alexander.waibel@kit.edu }
+%}
+
 \begin{document}
 \maketitle
 %
@@ -64,7 +64,7 @@ Most state-of-the-art phrase-based SMT systems use language model, phrase table 
 
 Encouraged by the results from the result from Rottmann and Vogel 2007 \cite{short}, Niehues and Kolss 2009 \cite{long} and Herr\-mann et al. 2013 \cite{tree}, we further propose a new data-driven, rule-based preordering method, which extracts and applies reordering rules based on syntax tree. The method is called Multi-Level-Tree (MLT) reordering, which orders the constituents on multiple levels of the syntax tree all together. This preordering method rearranges the words in source language into a similar order as they are supposed to be in the target language before translation. With the proper word order, better translation quality can be achieved. Especially, our preordering method is very suitable for translation between language pairs like English and Chinese, which have very different word orders. Besides, the method can also be combined with the above mentioned rule-based reordering methods to achieve better translation quality. 
 
-The rest of this paper is organized as follows. Section~\ref{re} presents a review of related work. In Section~\ref{mo}, we point out the problems for translation between English and Chinese and describe the motivation of MLT reordering. In Section~\ref{mu}, we introduce the details of the MLT preordering. In Section~\ref{ex}, we present the experiment results and evaluation. Finally, we conclude this paper in Section~\ref{co}.
+The rest of this paper is organized as follows. Section~\ref{re} presents a review of related work. In Section~\ref{mo}, we point out the problems for translation between English and Chinese and describe the motivation of MLT reordering. In Section~\ref{mu}, we introduce the details of the MLT reordering. In Section~\ref{ex}, we present the experimental results and evaluation. Finally, we conclude this paper in Section~\ref{co}.
 
 \section{Related Work}
 \label{re}
@@ -141,7 +141,7 @@ Our preordering method is based on automatically learned reordering rules. Reord
 
 \subsection{Reordering on Multiple Syntactic Levels}
 
-Reordering patterns are based on multiple levels of the syntax tree. Figure~\ref{unstructured} illustrates how the reordering patterns are detected from the syntax tree. In the example, the detection starts from the root node, go downwards three levels and use the nodes in these levels to detect the reordering pattern. These nodes that are used for detecting the reordering pattern are colored gray and have an italic font. Especially, the nodes with dark gray are the lowest ones among such nodes, which represent constituents that are actually reordered through the reordering rules. The leaf nodes in the syntax tree indicate words in the sentence, which has rectangle shape with angular corners.
+Reordering patterns are based on multiple levels of the syntax tree. Figure~\ref{unstructured} illustrates how the reordering patterns are detected from the syntax tree. In the example, the detection starts from the root node, go downwards three levels and use the nodes in these levels to detect the reordering pattern. These nodes that are used for detecting the reordering pattern are colored gray and have an italic font. The nodes with dark gray are the lowest ones among such nodes, which represent constituents that are actually reordered through the reordering rules. The leaf nodes in the syntax tree indicate words in the sentence, which has rectangle shape with angular corners.
 
 According to the alignment information with the corresponding Chinese translation, the node labeled with \emph{NP} is moved forward to the first place in the translation and the node labeled with \emph{IN-of} is moved forward to the second place in translation. This reordering cannot be handled with one-level tree-based reordering, but in MLT, from the root node with a search depth of three, the following reordering pattern can be found:\bigskip
 
@@ -209,9 +209,7 @@ In order to further explore the probability of improvement, the MLT reordering r
 
 We have conducted experiments on both English-to-Chinese and Chinese-to-English translation directions to get a better overview of the MLT reordering's effect. In the experiments, the MLT reordering rules are also combined with other reordering rules that are introduced before, in order to show the improvement achieved by our approach.
 
-In order to evaluate the potential of word reordering, we also used oracle reordering in the experiments. Oracle reordering is considered to be an optimally reordered sentence as input to the SMT system and do not allow additional reordering during decoding \cite{combine}. The oracle reordering is created by using the permutation of source sentences, which is extracted from the word alignment between the source text and reference \cite{birch2}.
-
-Because oracle reordering is considered as an optimally reordering, we can use it as input of the SMT system and the scores are the optimal results that can be achieved by word reordering, from which we can evaluate the potential of reordering methods.
+In order to evaluate the potential of word reordering, we also used oracle reordering in the experiments. Oracle reordering is considered to be an optimally reordered sentence as input to the SMT system and do not allow additional reordering during decoding \cite{combine}. So we can use it as input of the SMT system and the scores are the optimal results that can be achieved by word reordering, from which we can evaluate the potential of reordering methods.
 
 
 \subsection{English-to-Chinese System}
@@ -303,7 +301,7 @@ Table~\ref{tzhen2} shows the results for configurations with different reorderin
 
 The results shows increasing scores when we used reordering methods from short rules, long rules, tree rules to MLT rules. And better BLEU scores were achieved when we combined the different reordering rules. The MLT rules achieved better BLEU scores and TER scores in both translation directions, not only when it was used alone, but also it was added to the other reordering rules. As the MLT reordering rules were used alone, it showed an improvement of $1.61$ in BLEU score in the English-to-Chinese translation direction and an improvement of $2.16$ in BLEU score in the Chinese-to-English translation direction, in comparison with the baseline, which used no reordering at all. As the MLT reordering rules were combined with the other existing reordering rules, a further improvement of $0.43$ in BLEU score (from $13.38$ to $13.81$) was shown in the English-to-Chinese translation direction, as well as a further improvement of $0.3$ in BLEU score (from $23.84$ to $24.14$) in the Chinese-to-English translation direction.
 
-We have also found improvements in the sentence structure. Table~\ref{t1} and Table~\ref{t2} shows some translation examples in both translation directions. Sections are separated by double lines in the table. Each section of this table shows one translation example with the source sentence (\emph{source}), translation without using MLT reordering (\emph{no MLT}), translation with MLT reordering (\emph{MLT}) and the reference (\emph{reference}). \emph{Glossary} for the source sentences in translation examples from English to Chinese is also added for understanding. The translation without using MLT reordering comes from the configuration with highest BLEU score that didn't use MLT reordering. And the translation with MLT reordering comes from the configuration with highest BLEU score that used MLT reordering. From the examples, we can clearly see the improvements in sentence structure.
+We have also found improvements in the sentence structure. Table~\ref{t1} and Table~\ref{t2} shows some translation examples in both translation directions. Sections are separated by double lines in the table. Each section of this table shows one translation example with the source sentence (\emph{source}), translation without using MLT reordering (\emph{no MLT}), translation with MLT reordering (\emph{MLT}) and the reference (\emph{reference}). \emph{Glossary} for the source sentences or references in Chinese is also added as word for word translation. Each word or group of hyphenated words in the glossary corresponds a Chinese character or a group of Chinese characters that are not separated with space. A placeholder $\Box$ is used to replace words that are difficult to translate, which play grammatical roles generally. The translation without using MLT reordering comes from the configuration with highest BLEU score that didn't use MLT reordering. And the translation with MLT reordering comes from the configuration with highest BLEU score that used MLT reordering. From the examples, we can clearly see the improvements in sentence structure.
 
 % Each word or group of hyphenated words in the glossary corresponds a Chinese character or a group of Chinese characters that are not separated with space in the source sentence with the same order.
 
@@ -312,7 +310,7 @@ We have also found improvements in the sentence structure. Table~\ref{t1} and Ta
 \begin{tabular}{|l|m{0.7\textwidth}|} \hline
 Source & \cntext{陈至立 说 , 古巴 是 拉美 和 加勒比 地区 有 重要 影响 的 国家 。}
 \\ \hline
-Glossary & chen-zhili said , cuba is latin-american and caribbean region has great influence of country .
+Glossary & chen-zhili said , cuba is latin-american and caribbean region has great influence $\Box$ country .
 \\ \hline
 No MLT & chen zhili said : cuba is the latin america and the caribbean region has an important influence on the state .
 \\ \hline
@@ -343,17 +341,23 @@ Source & hu jintao also extended deep condolences on the death of the chinese vi
 \\ \hline
 No MLT & \cntext{胡锦涛 还 表示 深切 哀悼 的 受害者 家属 的 死亡 , 向 迂难者 家属 表示 诚挚 的 慰问 。} \\ \hline
 MLT & \cntext{胡锦涛 还 对 中国 迂难者 表示 哀悼 , 向 迂难者 家属 表示 诚挚 的 慰问 。} \\ \hline 
-Reference & \cntext{胡锦涛 还 对 中方 不幸 遇难 人员 表示 深切 的 哀悼 , 并 向 遇难 着 的 亲属 致以 诚挚 的 慰问 。} \\ \hline \hline
+Reference & \cntext{胡锦涛 还 对 中方 不幸 遇难 人员 表示 深切 的 哀悼 , 并 向 遇难者 的 亲属 致以 诚挚 的 慰问 。} \\ \hline
+Glossary & hu-jintao also on chinese unfortunately killed people extended deep $\Box$ condolences , and to bereaved 's families expressed sincere $\Box$ sympathy .
+\\ \hline \hline
 Source & satisfying personal interests and expanding knowledge are also major reasons why hourly work appeals to people .\\ \hline
 No MLT & \cntext{满足 个人 利益 和 扩大 知识 也 是 主要 原因 小时 工作 吸引 人 。} \\ \hline
 MLT & \cntext{满足 个人 利益 和 扩大 知识 也 是 为什么 学生 工作 吸引 人 的 主要 原因 。} \\ \hline 
-Reference & \cntext{满足 个人 兴趣 , 扩大 自己 的 知识面 也 是 兼职 小时 工 受 青睐 的 一 个 重要 原因 。} \\ \hline \hline
+Reference & \cntext{满足 个人 兴趣 , 扩大 自己 的 知识面 也 是 兼职 小时 工 受 青睐 的 一 个 重要 原因 。}  \\ \hline
+Glossary & satisfying personal interests , expanding own $\Box$ knowledge also are part-time hourly work is favored $\Box$ one $\Box$ major reason .
+\\ \hline \hline
 
 Source & the dalai lama will go to visit washington this month .\\ \hline
 No MLT & \cntext{达赖 喇嘛 将 访问 华盛顿 的 这 一 个 月 。} \\ \hline
 MLT & \cntext{达赖 喇嘛 将 本 月 访问 华盛顿 。} \\ \hline
 %? add more examples?
 Reference & \cntext{达赖 喇嘛 将 在 本 月 前往 华盛顿 访问 。} \\ \hline
+Glossary & dalai lama will in this month go-to washington visit .
+\\ \hline
 \end{tabular}
 \caption{Examples of translations from English to Chinese}
 \label{t2}
