@@ -1,6 +1,6 @@
 \begin{tikzpicture}[
 -,>=stealth',
-level/.style={sibling distance = 1.2cm, level distance = 1.5cm},
+level/.style={sibling distance = 1.2cm, level distance = 1.2cm},
 level 1/.style={sibling distance=2.75cm},
 level 2/.style={sibling distance=3.2cm}, 
 level 4/.style={sibling distance=2cm}, 
@@ -21,14 +21,14 @@ child{ node(E) [arn_n, fill=gray!70, font=\itshape] {NP}
 child{ node [arn_x](F) {JJ\\ peaceful}}
 child{ node [arn_x](G) {NN\\ reunification}}}}};
 
-\node [below=6.7cm of A] (H) {\cntext{和平}};
+\node [below=5.7cm of A] (H) {\cntext{和平}};
 \node [right=0.6cm of H](I) {\cntext{统一}};
 \node [right=0.6cm of I](J) {\cntext{的}};
 \node [right=0.6cm of J](K) {\cntext{十}};
 \node [right=0.6cm of K](L) {\cntext{大}};
 \node [right=0.6cm of L](M) {\cntext{好处}};
 
-\node [below=4.7cm of A](N) {};
+\node [below=3.7cm of A](N) {};
 
 \draw[dashed] (A) -- (N) -- (K.north);
 \draw[dashed] (B) -- (B|-N) -- (L.north);
