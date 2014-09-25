@@ -1,3 +1,5 @@
+rm *.dvi
+rm *.ps
 rm *.aux
 rm *.lof
 rm *.log
