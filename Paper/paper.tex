@@ -60,7 +60,7 @@ We propose a novel data-driven rule-based preordering approach, which uses the t
 
 Word order is a general issue when we want to translate text from one language to another. Different languages normally have different word orders and the difference could be very huge. Among all the languages, Chinese is one language which is very different from English, because they belong to different language families and have long period of separately development. Both languages have a Subject-Verb-Object order, but they also have a lot of differences in word order. Especially sentences in both languages can sometimes have completely different syntactic structures. The differences may involve long-distance or unstructured position changes.
 
-Most state-of-the-art phrase-based SMT systems use language model, phrase table or decoder to adjust the word order. Or an additional reordering model is used in the log-linear model for word reordering. However, these methods may have some disadvantages, such as some do not handle long-distance reordering, some do not handle unstructured reordering and some are rather time-consuming.
+The decoder in phrase-based SMT systems is guided by language model, phrase table and reordering models, which makes word reordering possible. However, it may have some disadvantages, such as it can't handle long-distance reordering or unstructured reordering properly or it may be rather time-consuming.
 
 Encouraged by the results from the result from Rottmann and Vogel 2007 \cite{short}, Niehues and Kolss 2009 \cite{long} and Herr\-mann et al. 2013 \cite{tree}, we further propose a new data-driven, rule-based preordering method, which extracts and applies reordering rules based on syntax tree. The method is called Multi-Level-Tree (MLT) reordering, which orders the constituents on multiple levels of the syntax tree all together. This preordering method rearranges the words in source language into a similar order as they are supposed to be in the target language before translation. With the proper word order, better translation quality can be achieved. Especially, our preordering method is very suitable for translation between language pairs like English and Chinese, which have very different word orders. Besides, the method can also be combined with the above mentioned rule-based reordering methods to achieve better translation quality. 
 
@@ -79,11 +79,11 @@ Some early approaches use manually defined reordering rules based on the linguis
 
 Rottmann and Vogel 2007 \cite{short} introduced the idea of extracting reordering rules from the POS tag sequences of training data and use them for reordering. Niehues and Kolss 2009 \cite{long} went further, and developed a method for long-distance word reordering, which works good on German-English translation task due to the long-distance shift of verbs. The method extracts discontinuous reordering rules in addition to the continuous ones, which uses a placeholder to match several words and enables the word to shift cross long distance.
 
-Afterwards, Herrmann et al. 2013 \cite{tree} introduced a new approach to reorder the words based on syntax tree, which leads to further improvements on translation quality. The algorithm takes syntactic structure of the sentences into account and extract the rules from the syntax tree by detecting the reordering of child sequences. It also has the variant based only on part of the child sequences which is suitable for language with flat syntactic structure such as German.
+Afterwards, Herrmann et al. 2013 \cite{tree} introduced a new approach to reorder the words based on syntax tree, which led to further improvements on translation quality. The algorithm takes the syntactic structure of the source sentence into account and extract the rules from the syntax tree by detecting the reordering of child sequences. It is also possible to compute reorderings only based on part of the child sequences, which is suitable for language with flat syntactic structures such as German \cite{combine}.
 
-However, these approaches which are based on POS tag sequences or syntax trees are mostly designed for languages like German and are not especially adapted for languages like Chinese. As Chinese has very different word orders, a reordering approach, which can further explore the syntactic structure of Chinese and utilize this information for reordering, is desirable.
+However, these approaches which are based on POS tag sequences or syntax trees may not fully explore the syntactic aspect of Chinese. As Chinese has very different word orders, a reordering approach, which can further explore the hierarchical structure of Chinese and utilize this information for reordering, may further improve the translation quality.
 
-The hierarchical phrase-based translation model \cite{hier} is especially suitable for Chinese translation, and provide very good translation results. It extracts hierarchical rules by using information of the syntactic structure. Phrases from different hierarchies, or so-called phrases of phrases, are reordered during the decoding. 
+The hierarchical phrase-based translation model \cite{hier} is especially suitable for translation into Chinese, and delivers very good translation results. It extracts hierarchical rules by using information of the syntactic structure. Phrases from different hierarchies, or so-called phrases of phrases, are reordered during the decoding. 
 
 The idea of phrases on different hierarchies has inspired us to create this preordering method based on multiple levels of the syntax tree. Besides, we also hope to detach the reordering from decoding phase and do it separately in a pre-process before decoding, in order to reduce the time for translation. This kind of preordering approaches use linguistic information to modify the word orders.
 
@@ -94,7 +94,7 @@ In this paper, we compare our results to the aforementioned rule-based reorderin
 \section{Motivation}
 \label{mo}
 
-The word order between English and Chinese differs very much. For one, the words in Chinese have generally different origins as those in English, which leads to very different vocabulary and word construction. Sometimes it is very hard to find corresponding words in the other language. For example, some prepositions in Chinese have very different usage than those prepositions in English. Also the continuous writing of Chinese without spaces makes this problem more severe, since word boundaries are not always so clear in Chinese. The text needs to be segmented first before translation. A word segmentation process is used to separate the words, but the results may not always be ideal.
+The word order between English and Chinese differs very much. For one, the words in Chinese have generally different origins as those in English, which leads to very different vocabulary and word construction. Sometimes it is very hard to find corresponding words in the other language. For example, some prepositions in Chinese have very different usage than the corresponding prepositions in English. Also the continuous writing of Chinese without spaces makes this problem more severe, since word boundaries are not always so clear in Chinese. The text needs to be segmented first before translation. A word segmentation process is used to separate the words, but the results may not always be ideal.
 
 For the other, both languages have sometimes very different sentence structures. Thus, a word-for-word translation between English and Chinese is often unnatural or difficult to understand. Each of them has some sentence patterns that do not exist or rarely used in the other. In Chinese, a modifier is often put before the part that it modifies. While in English, it is very common that the modifier is put after the part that it modifies. Besides, English sentences with a lot of long clauses may be more suitable to translate into several Chinese sentences, because in Chinese people do not tend to use long clauses in general. 
 
@@ -124,12 +124,12 @@ I find this very much disturbing \uline{when we are talking about what is going 
 }
 \end{itemize}
 
-Following the analysis above, in order to improve the reordering between English and Chinese, we need reordering method that can handle more complicated, unstructural word order change. Inspired by the ideas of reordering on syntax tree and hierarchical phrases, we created the Multiple-Level-Tree(MLT) reordering, which reorders words based on multiple syntactic levels and can handle long distance word position change and complicated word position change very well.
+Following the analysis above, we can see the word reordering between English and Chinese is very unstructural, because it involves word movement between different word groups or syntactic hierarchies in the source language. In order to improve the reordering, we need methods that can handle more complicated, unstructural word order change. Inspired by the ideas of reordering on syntax tree and hierarchical phrases, we created the Multiple-Level-Tree(MLT) reordering, which reorders words based on multiple syntactic levels and can handle long distance word position change and complicated word position change very well.
 
 \section{Multi-Level-Tree Reordering}
 \label{mu}
 
-Our preordering method is based on automatically learned reordering rules. Reordering rules show how sentences should be reordered in source language before translation. In our system, the rules are generated by using the word alignment, and syntax tree, all of which are calculated based on the training data. After reordering rules are applied to the source sentences, word lattices are generated. A word lattice contains all the reordering possibilities of a source sentence and is further passed to the decoder for translation. The preordering system could be illustrated as Figure~\ref{prereordering}.
+Our preordering method is based on automatically learned reordering rules. Reordering rules show how sentences should be reordered in source language before translation. In our system, the rules are generated by using the word alignment, and syntax tree, all of which are calculated based on the training data. After reordering rules are applied to the source sentences, word lattices are generated. A word lattice contains all the reordering possibilities of a source sentence and is further passed to the decoder for translation. The preordering system is illustrated as Figure~\ref{prereordering}.
 
 \begin{figure*}
 \centering
@@ -149,7 +149,7 @@ According to the alignment information with the corresponding Chinese translatio
 \texttt{-> NP IN CD JJ NNS}\\
 \texttt{-> 4 3 0 1 2 (alternative with index)}\bigskip
 
-The POS tags in bold corresponds to nodes with dark gray in Figure~\ref{unstructured}, which presents constituents that are actually reordered. The parentheses in the reordering pattern indicate the corresponding hierarchies in the syntax tree. The reordering can be alternatively represented with index, which is the actual internal representation to avoid ambiguity caused by POS tags with the same name and we use this representation throughout this paper.
+The POS tags in bold corresponds to nodes with dark gray in Figure~\ref{unstructured}, which presents constituents that are actually reordered. The parentheses in the reordering pattern indicate the corresponding hierarchies in the syntax tree. The reordering can be alternatively represented with indices, which is the actual internal representation to avoid ambiguity caused by POS tags with the same name and we use this representation throughout this paper.
 
 \begin{figure}[ht]
 \centering
@@ -165,7 +165,7 @@ In order to find as much information for reordering as possible, the algorithm o
 
 In the implementation, the program conducts a depth-first search (DFS) to traverse every node in a syntax tree. Every time when a node is reached, the program conducts another iterative deepening depth-first search (IDDFS) in its subtree with depth-limit from $1$ to the subtree's depth. And the program detects if there are any patterns of word position changes at the same time, by using the alignment for comparison.
 
-The detected word position changes are checked for their validity for reordering rules. A valid reordering pattern should both has actual word reordering and clearly distinguishable new order on the side of the target language, i.e. no collision of aligned ranges on the target side.
+The detected word position changes are checked for their validity for reordering rules. A valid reordering pattern should both have actual word reordering and clearly distinguishable new order on the side of the target language, i.e. no collision of aligned ranges on the target side.
 
 \begin{figure}[ht]
 \centering
@@ -230,7 +230,7 @@ The reordering rules were extracted by using the word alignments, POS tags and s
 \multicolumn{2}{|l|}{Development Data} & 919 & 30K & 25K & 164K & 142K \\ \hline
 \multicolumn{2}{|l|}{Test Data} & 1663 & 47K & 38K & 263K & 220K \\ \hline
 \end{tabular}
-\caption{Data details in English-to-Chinese system}
+\caption{Corpus statistics in the English-to-Chinese system}
 \label{denw}
 \end{table*}
 
@@ -250,7 +250,7 @@ The reordering rules were extracted by using the word alignments, POS tags and s
 @Tree Rules   & 13.30 & :={b9 - b2} & 70.42 \\ \hline
 \textbf{@MLT Rules}    & \textbf{:={13.68}} & \textbf{:={b10 - b2}} & \textbf{:={70.25}} \\ \hline
 \end{spreadtab}
-\caption{Result overview of English-to-Chinese system}
+\caption{Result overview of the English-to-Chinese system}
 \label{tenw}
 \end{table}
 
@@ -271,7 +271,7 @@ Training Data & 303K & 8.56M & 10.96M & 47.27M & 60.88M\\ \hline
 Development Data & 919 & 25K & 30K & 142K & 164K \\ \hline
 Test Data & 1663 & 38K & 47K & 220K & 263K \\ \hline
 \end{tabular}
-\caption{Data details in Chinese-to-English system}
+\caption{Corpus statistics in the Chinese-to-English system}
 \label{dzhen2}
 \end{table*}
 
@@ -291,7 +291,7 @@ Test Data & 1663 & 38K & 47K & 220K & 263K \\ \hline
 @Tree Rules   & 23.35 & :={b9 - b2} & 61.52\\ \hline
 \textbf{@MLT Rules}    & \textbf{:={23.96}} & \textbf{:={b10 - b2}} & \textbf{:={60.83}}\\ \hline
 \end{spreadtab}
-\caption{Result overview of Chinese-to-English systems}
+\caption{Result overview of the Chinese-to-English systems}
 \label{tzhen2}
 \end{table}
 
@@ -380,6 +380,11 @@ We have conducted experiments in both translation directions between English and
 Besides the improvement in BLEU scores, our preordering approach also showed improvement in the sentence structure of the translation. Considering sentences that have complicated structure only make up a small part of the data, even a small improvement in the result can mean a big improvement in translating these complicated sentences.
 
 By taking a close look at the gap between the scores of oracle reordering and the best scores achieved by MLT reordering, we can also see, there is still potential for improvements of translation between English and Chinese through better reordering methods.
+
+\section{Acknowledgments}
+\label{Acknowledgments}
+The authors gratefully acknowledge the support by an \mbox{interACT} student exchange scholarship. The research leading to these results has received funding from the European Union $7$th Framework Programme (FP$7$/$2007$-$2013$) under grant agreement No. $287658$.
+
 
 \bibliographystyle{myieeetr}
 \bibliography{paper}
